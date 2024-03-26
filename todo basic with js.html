@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Todo App</h2>
+        <input type="text" id="todoInput" placeholder="Enter your todo">
+        <button onclick="addTodo()">Add Todo</button>
+        <ul id="todoList">
+            <!-- Todo items will be added here -->
+        </ul>
+    </div>
+
+    <script>
+        function getHeaders() {
+    return {
+        'Authorization': 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJqb2huQGV4YW1wbGUuY29tIiwiZXhwIjoxNzA5Njc2MTY3LCJpYXQiOjE3MDk2NTgxNjcsImp0aSI6ImVkMDRlNDVlLTcyYzItNDQxNC1iYTI1LTk0MTFkZTlmZTc2MSJ9.AdI5NbgM11zSetsgHGwgOoDm7b88sp9LTcivNs1DYXzpGtbpAzq4B4utehL0we3HqbloJ6rg_7sh4aDGPib3Xw',
+        'Content-Type': 'application/json'
+    };
+}
+
+function fetchTodos() {
+    fetch('http://127.127.0.1:8080/task', {
+        method: 'GET',
+        headers: getHeaders()
+    })
+    .then(response => response.json())
+    .then(data => {
+        const todoList = document.getElementById('todoList');
+        todoList.innerHTML = '';
+        data.taskInfoDtos.forEach(todo => {
+            const li = document.createElement('li');
+            li.textContent = todo.description;
+            todoList.appendChild(li);
+            // Adding delete button for each todo
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.classList.add('delete-btn');
+            deleteBtn.onclick = function() {
+                deleteTodo(todo.id);
+            };
+            li.appendChild(deleteBtn);
+        });
+    })
+    .catch(error => console.error('Error fetching todos:', error));
+}
+
+// Function to add a new todo
+function addTodo() {
+    const todoInput = document.getElementById('todoInput');
+    const todoName = todoInput.value.trim();
+    if (todoName !== '') {
+        fetch('http://127.127.0.1:8080/task', {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ description: todoName, completed: true })
+        })
+        .then(response => {
+            if (response.ok) {
+                todoInput.value = '';
+                fetchTodos();
+            } else {
+                console.error('Failed to add todo:', response.statusText);
+            }
+        })
+        .catch(error => console.error('Error adding todo:', error));
+    }
+}
+
+
+        // Function to delete a todo
+        function deleteTodo(todoId) {
+            fetch(`YOUR_DELETE_TODO_API_ENDPOINT/${todoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer YOUR_AUTH_TOKEN'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    fetchTodos();
+                } else {
+                    console.error('Failed to delete todo:', response.statusText);
+                }
+            })
+            .catch(error => console.error('Error deleting todo:', error));
+        }
+
+        // Fetch todos when the page loads
+        fetchTodos();
+    </script>
+</body>
+</html>
